@@ -1225,6 +1225,16 @@ impl OpenCADStudio {
         self.refresh_xref_manager_if_stale();
         // Count mode recolours its references after the drawing changes.
         self.refresh_count_if_stale();
+        // The WASM host bridge observes the same settled selection as native
+        // plugins. Never leak a selection from another tab or a pending load.
+        #[cfg(target_arch = "wasm32")]
+        if crate::io::host_bridge::is_embed_mode() && self.opening.is_none() {
+            if let Some(tab) = self.tabs.get(self.active_tab).filter(|t| !t.is_start) {
+                let handles: Vec<u64> = tab.scene.selected_handles_in_order()
+                    .into_iter().map(|h| h.value()).collect();
+                crate::io::host_bridge::emit_selection(tab.id, &tab.tab_display_name(), &handles);
+            }
+        }
         // Let V4 plugins observe selection changes that happened while handling
         // this message (picking, window select, QSELECT, SELECTALL, grip edits,
         // and plugin request draining).
@@ -2202,7 +2212,7 @@ impl OpenCADStudio {
                 let task = self.on_file_opened(name, path, doc, caches, ifccad_session);
                 #[cfg(target_arch = "wasm32")]
                 if crate::io::host_bridge::is_embed_mode() {
-                    crate::io::host_bridge::emit_loaded(&loaded_name);
+                    crate::io::host_bridge::emit_loaded(&loaded_name, self.tabs[self.active_tab].id);
                     let dirty = self.tabs.get(self.active_tab).is_some_and(|tab| tab.dirty);
                     crate::io::host_bridge::emit_dirty(dirty);
                 }

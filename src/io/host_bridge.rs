@@ -63,6 +63,28 @@ pub fn saved_label_from_ack(
     })
 }
 
+/// Parse an opaque DXF handle only when it fits the engine's native u64 handle.
+/// Never accept sign, whitespace, separators or a zero/null entity.
+#[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
+pub fn parse_embed_entity_handle(value: &str) -> Option<u64> {
+    if value.is_empty() || value.len() > 16 || !value.bytes().all(|b| b.is_ascii_hexdigit()) {
+        return None;
+    }
+    u64::from_str_radix(value, 16)
+        .ok()
+        .filter(|value| *value != 0)
+}
+
+/// Only one selected entity can be linked to a single GIS feature.
+/// Clearing or multi-select always emits a null handle, never a guessed one.
+#[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
+pub fn single_embed_selection(values: &[u64]) -> Option<String> {
+    match values {
+        [only] if *only != 0 => Some(format!("{only:X}")),
+        _ => None,
+    }
+}
+
 #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
 pub(crate) fn push_pending_save_in(queue: &mut VecDeque<PendingSave>, entry: PendingSave) {
     if queue.len() >= MAX_PENDING_SAVES {
@@ -84,7 +106,8 @@ pub(crate) fn take_pending_save_in(
 #[cfg(target_arch = "wasm32")]
 mod web {
     use super::{
-        cad_save_format, push_pending_save_in, search_has_flag, take_pending_save_in, PendingSave,
+        cad_save_format, parse_embed_entity_handle, push_pending_save_in, search_has_flag,
+        single_embed_selection, take_pending_save_in, PendingSave,
     };
     use std::collections::VecDeque;
     use std::sync::atomic::{AtomicU64, AtomicU8, Ordering};
@@ -102,6 +125,10 @@ mod web {
         RequestSave {
             format: Option<String>,
         },
+        Select {
+            name: String,
+            handle: u64,
+        },
         SaveAck {
             save_id: Option<String>,
             ok: bool,
@@ -117,6 +144,8 @@ mod web {
     static PENDING_SAVES: Mutex<VecDeque<PendingSave>> = Mutex::new(VecDeque::new());
     static NEXT_SAVE_ID: AtomicU64 = AtomicU64::new(1);
     static DIRTY_STATE: AtomicU8 = AtomicU8::new(0);
+    /// The pinned drawing and last announced selected handle (including a clear).
+    static ACTIVE_DRAWING: Mutex<Option<(u64, String, Option<Option<String>>)>> = Mutex::new(None);
 
     fn has_query_flag(key: &str, expected: &str) -> bool {
         web_sys::window()
@@ -195,6 +224,12 @@ mod web {
                         "ocs:request-save" => Some(HostCommand::RequestSave {
                             format: str_prop(&data, "format"),
                         }),
+                        "ocs:select" => str_prop(&data, "name")
+                            .zip(
+                                str_prop(&data, "handle")
+                                    .and_then(|h| parse_embed_entity_handle(&h)),
+                            )
+                            .map(|(name, handle)| HostCommand::Select { name, handle }),
                         "ocs:saved" => Some(HostCommand::SaveAck {
                             save_id: str_prop(&data, "saveId"),
                             ok: bool_prop(&data, "ok").unwrap_or(false),
@@ -216,7 +251,15 @@ mod web {
             closure.forget();
 
             let caps = js_sys::Array::new();
-            for cap in ["dwg", "dxf", "readOnly", "save", "saveId", "dirty"] {
+            for cap in [
+                "dwg",
+                "dxf",
+                "readOnly",
+                "save",
+                "saveId",
+                "dirty",
+                "selection",
+            ] {
                 caps.push(&JsValue::from_str(cap));
             }
             post_to_host(
@@ -256,8 +299,43 @@ mod web {
         take_pending_save_in(&mut queue, save_id)
     }
 
-    pub fn emit_loaded(name: &str) {
+    pub fn clear_active_drawing() {
+        *ACTIVE_DRAWING.lock().unwrap_or_else(|e| e.into_inner()) = None;
+    }
+
+    pub fn is_active_drawing(tab_id: u64, name: &str) -> bool {
+        ACTIVE_DRAWING
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .as_ref()
+            .is_some_and(|(id, label, _)| *id == tab_id && label == name)
+    }
+
+    pub fn emit_loaded(name: &str, tab_id: u64) {
+        *ACTIVE_DRAWING.lock().unwrap_or_else(|e| e.into_inner()) =
+            Some((tab_id, name.to_string(), None));
         post_to_host("ocs:loaded", &[("name", JsValue::from_str(name))], None);
+    }
+
+    /// Called on the normal UI update boundary: no poll-to-JS reads and no
+    /// broadcast if selection remains unchanged. Locked to the loaded tab.
+    pub fn emit_selection(tab_id: u64, name: &str, selected: &[u64]) {
+        let next = single_embed_selection(selected);
+        let mut active = ACTIVE_DRAWING.lock().unwrap_or_else(|e| e.into_inner());
+        let Some((id, expected, previous)) = active.as_mut() else {
+            return;
+        };
+        if *id != tab_id || expected != name || previous.as_ref() == Some(&next) {
+            return;
+        }
+        *previous = Some(next.clone());
+        drop(active);
+        let value = next.as_deref().map_or(JsValue::NULL, JsValue::from_str);
+        post_to_host(
+            "ocs:selection",
+            &[("name", JsValue::from_str(name)), ("handle", value)],
+            None,
+        );
     }
 
     pub fn emit_dirty(dirty: bool) {
@@ -354,8 +432,8 @@ pub use web::*;
 #[cfg(test)]
 mod tests {
     use super::{
-        cad_save_format, push_pending_save_in, saved_label_from_ack, search_has_flag,
-        take_pending_save_in, PendingSave,
+        cad_save_format, parse_embed_entity_handle, push_pending_save_in, saved_label_from_ack,
+        search_has_flag, single_embed_selection, take_pending_save_in, PendingSave,
     };
     use std::collections::VecDeque;
 
@@ -368,6 +446,39 @@ mod tests {
             edit_revision: 11,
             camera_generation: 2,
         }
+    }
+
+    #[test]
+    fn embedded_handle_parser_rejects_invalid_or_ambiguous_handles() {
+        assert_eq!(parse_embed_entity_handle("2f"), Some(47));
+        assert_eq!(
+            parse_embed_entity_handle("FFFFFFFFFFFFFFFF"),
+            Some(u64::MAX)
+        );
+        for value in [
+            "",
+            "0",
+            "0000",
+            " F",
+            "0x2F",
+            "-2",
+            "+2",
+            "1 2",
+            "g",
+            "FFFFFFFFFFFFFFFFF",
+            "1/2",
+            "2\n",
+        ] {
+            assert_eq!(parse_embed_entity_handle(value), None, "{value:?}");
+        }
+    }
+
+    #[test]
+    fn single_selected_entity_emits_one_uppercase_hex_or_clear() {
+        assert_eq!(single_embed_selection(&[0x2f]), Some("2F".to_owned()));
+        assert_eq!(single_embed_selection(&[]), None);
+        assert_eq!(single_embed_selection(&[1, 2]), None);
+        assert_eq!(single_embed_selection(&[0]), None);
     }
 
     #[test]

@@ -204,6 +204,47 @@ impl Scene {
         self.bump_selection_set();
     }
 
+    /// Select one visible entity when an authenticated embedding host requests
+    /// an exact DXF handle. Does not edit the document or expand annotations.
+    /// A handle in a different space, on a hidden layer, or not selectable is
+    /// never focused by the host bridge.
+    #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
+    pub(crate) fn select_embed_entity(&mut self, handle: Handle) -> bool {
+        let block = self.interaction_block_handle();
+        let Some(record) = self
+            .document
+            .block_records
+            .iter()
+            .find(|r| r.handle == block)
+        else {
+            return false;
+        };
+        if !record.entity_handles.contains(&handle)
+            || !self.without_sheet_viewports(&[handle]).contains(&handle)
+            || !self.passes_selection_filter(handle)
+            || self.is_reference_only(handle)
+        {
+            return false;
+        }
+        let Some(entity) = self.document.get_entity(handle) else {
+            return false;
+        };
+        let frozen: Option<HashSet<Handle>> = self
+            .interaction_viewport_frozen_layers()
+            .map(|layers| layers.iter().copied().collect());
+        if !self.resident_entity_visible(
+            entity,
+            block,
+            frozen.as_ref(),
+            self.displayed_annotation_scale_handle(),
+            self.annotation_all_visible(),
+        ) {
+            return false;
+        }
+        self.replace_selection_exact(&[handle]);
+        true
+    }
+
     pub fn select_all_visible(&mut self) -> usize {
         let block = self.interaction_block_handle();
         let frozen: Option<HashSet<Handle>> = self
@@ -1455,8 +1496,11 @@ impl Scene {
         // the resident set removes only their wires (bump_entities drops them
         // from the tessellation memos too).
         if !erased.is_empty() {
-            let touched_blocks =
-                self.touched_block_definition_names(&sentinel_handles, &candidate_block_handles, &[]);
+            let touched_blocks = self.touched_block_definition_names(
+                &sentinel_handles,
+                &candidate_block_handles,
+                &[],
+            );
             self.invalidate_dependency_index();
             if touched_blocks.is_empty() {
                 self.bump_entities(&erased);
@@ -1762,6 +1806,25 @@ mod tests {
     }
 
     use super::*;
+
+    #[test]
+    fn embedded_host_selects_only_one_resident_visible_entity_without_edit() {
+        use document::entities::Line;
+        let mut scene = Scene::new();
+        let shown = scene.add_entity(EntityType::Line(Line::from_coords(
+            0.0, 0.0, 0.0, 5.0, 0.0, 0.0,
+        )));
+        let mut invisible = Line::from_coords(0.0, 2.0, 0.0, 5.0, 2.0, 0.0);
+        invisible.common.invisible = true;
+        let hidden = scene.add_entity(EntityType::Line(invisible));
+        let before = scene.document.get_entity(shown).unwrap().clone();
+        assert!(scene.select_embed_entity(shown));
+        assert_eq!(scene.selected_handles_in_order(), vec![shown]);
+        assert!(!scene.select_embed_entity(hidden));
+        assert!(!scene.select_embed_entity(Handle::new(u64::MAX)));
+        assert_eq!(scene.selected_handles_in_order(), vec![shown]);
+        assert_eq!(scene.document.get_entity(shown).unwrap(), &before);
+    }
 
     #[test]
     fn bulk_selection_matches_selecting_one_at_a_time() {

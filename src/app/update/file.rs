@@ -9460,9 +9460,28 @@ impl OpenCADStudio {
                 }
                 self.active_tab = 0;
                 host_bridge::clear_pending_saves();
+                host_bridge::clear_active_drawing();
                 self.read_only = read_only;
                 self.active_modal = None;
                 self.update(Message::WebFileDropped(name, bytes, None))
+            }
+            HostCommand::Select { name, handle } => {
+                if self.opening.is_some() {
+                    return Task::none();
+                }
+                let Some(tab) = self.tabs.get_mut(self.active_tab) else {
+                    return Task::none();
+                };
+                if tab.is_start
+                    || tab.active_cmd.is_some()
+                    || tab.active_grip.is_some()
+                    || !host_bridge::is_active_drawing(tab.id, &name)
+                    || tab.tab_display_name() != name
+                    || !tab.scene.select_embed_entity(Handle::new(handle))
+                {
+                    host_bridge::emit_error("selection_unavailable", "CAD handle not selectable in the active drawing");
+                }
+                Task::none()
             }
             HostCommand::RequestSave { format } => {
                 if self.read_only {
