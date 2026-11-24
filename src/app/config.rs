@@ -130,10 +130,16 @@ pub struct UiThemeConfig {
 
 impl Default for UiThemeConfig {
     fn default() -> Self {
-        let theme = iced::Theme::Oxocarbon;
         Self {
-            name: theme.to_string(),
-            palette: UiThemePalette::from_iced(theme.seed()),
+            name: "Custom".to_string(),
+            palette: UiThemePalette {
+                background: [19, 45, 58],
+                text: [243, 248, 250],
+                primary: [43, 120, 185],
+                success: [65, 170, 130],
+                warning: [236, 177, 70],
+                danger: [224, 91, 91],
+            },
         }
     }
 }

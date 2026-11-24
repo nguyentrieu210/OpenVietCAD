@@ -298,6 +298,12 @@ debug = 0
 [profile.release]
 strip = true
 
+# Downstream bounded-WASM candidate: reduce compiler resource use for the
+# large geometry kernel. Validate geometry and performance before release.
+[profile.release.package.solidcore]
+opt-level = 1
+codegen-units = 64
+
 [[bench]]
 name = "performance_benchmarks"
 harness = false
