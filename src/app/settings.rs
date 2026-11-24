@@ -1618,7 +1618,7 @@ impl Default for UserSettings {
             quick_properties: false,
             quick_properties_float: false,
             quick_properties_pos: [40.0, 40.0],
-            language: crate::i18n::Language::default(),
+            language: crate::i18n::Language::ViVn,
             cliprompt_lines: 3,
             commandline_fade_ms: 3000,
             command_line_opacity: 80,

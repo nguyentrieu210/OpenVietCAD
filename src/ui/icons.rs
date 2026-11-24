@@ -650,7 +650,7 @@ fn logo_handle(letters: bool, theme: &Theme) -> svg::Handle {
         if let Some(handle) = cache.get(&key) {
             return handle.clone();
         }
-        let source = if letters { logo_letters() } else { LOGO };
+        let source: &[u8] = include_bytes!("../../assets/ovg-mark.svg");
         let handle = svg::Handle::from_memory(recolor_logo(source, theme));
         if cache.len() >= 8 {
             cache.clear();

@@ -6966,7 +6966,7 @@ impl OpenCADStudio {
             save_dialog_filename: "drawing.dwg".to_string(),
             save_dialog_for_unsaved: false,
             default_save_format: crate::io::DEFAULT_SAVE_FORMAT.to_string(),
-            language: crate::i18n::Language::default(),
+            language: crate::i18n::Language::ViVn,
             // Plot style
             active_plot_style: crate::io::plot_style::PlotStyleTable::load_named(
                 crate::io::plot_style::DEFAULT_PLOT_STYLE,

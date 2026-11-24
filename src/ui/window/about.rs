@@ -186,7 +186,7 @@ pub fn view_window(sizing: crate::ui::modal::ModalSizing) -> Element<'static, Me
         Length::Fixed(148.0)
     };
     let logo = svg(svg::Handle::from_memory(include_bytes!(
-        "../../../assets/logo.svg"
+        "../../../assets/ovg-mark.svg"
     )))
     .width(Length::Fixed(72.0))
     .height(Length::Fixed(72.0));
@@ -195,8 +195,8 @@ pub fn view_window(sizing: crate::ui::modal::ModalSizing) -> Element<'static, Me
         row![
             logo,
             column![
-                text("Open CAD Studio").size(28).style(primary_style),
-                text(t!("CAD application for Architecture & Engineering"))
+                text("OpenVietGIS CAD").size(28).style(primary_style),
+                text("Based on OpenCADStudio · GPL-3.0")
                     .size(11)
                     .style(muted_style),
                 text(version.clone()).size(13),

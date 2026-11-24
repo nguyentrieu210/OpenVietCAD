@@ -522,7 +522,7 @@ pub(super) fn title_case_word(value: &str) -> String {
 /// This used to redraw the mark stroke by stroke in code, with the background
 /// colour written out as a literal. The taskbar therefore kept showing whatever
 /// the logo used to be, however many times the logo itself was redrawn — the
-/// one icon in the application that did not come from `assets/logo.svg`.
+/// one icon in the application that did not come from `assets/ovg-mark.svg`.
 ///
 /// Returns 32×32 RGBA. A logo that cannot be rendered leaves the window with
 /// the platform default rather than something invented here, which would put
@@ -530,7 +530,7 @@ pub(super) fn title_case_word(value: &str) -> String {
 #[cfg(not(target_arch = "wasm32"))]
 pub(super) fn build_window_icon() -> Option<Vec<u8>> {
     const W: u32 = 32;
-    static LOGO: &[u8] = include_bytes!("../../assets/logo.svg");
+    static LOGO: &[u8] = include_bytes!("../../assets/ovg-mark.svg");
 
     let tree = resvg::usvg::Tree::from_data(LOGO, &resvg::usvg::Options::default()).ok()?;
     let mut pixmap = resvg::tiny_skia::Pixmap::new(W, W)?;

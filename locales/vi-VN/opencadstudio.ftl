@@ -292,7 +292,7 @@ options =
     .right-click-mode-enter-first = Enter trước, nhấp lần hai = menu
 
 command-line =
-    .ready = Open CAD Studio sẵn sàng.
+    .ready = OpenVietGIS CAD sẵn sàng.
     .hint = Nhập lệnh hoặc dùng dải băng. Mở OBJ từ tab Chèn.
     .label = Lệnh:
     .literal-spaces = Khoảng trắng cố định: Phím cách vẫn ở trong dòng thay vì chạy lệnh. Luôn bật cho đến khi tắt.
@@ -2905,7 +2905,7 @@ file =
     .oops-nothing-to-restore = OOPS: không có gì để khôi phục.
     .oops-restored-n-object-s = OOPS: đã khôi phục __ocs_fmt_0__ đối tượng.
     .enter-command-name-to-repeat = Enter command name to repeat:
-    .open-cad-studio-ready = Open CAD Studio đã sẵn sàng.
+    .open-cad-studio-ready = OpenVietGIS CAD đã sẵn sàng.
     .open-discussions-on-github = Mở Thảo luận trên GitHub
     .open-file-title-case = Mở Tệp
     .open-file-picker-title-case = Mở Tệp…
@@ -8612,7 +8612,7 @@ menu-labels =
     .n-3-viewports = 3 Viewports
     .n-3d-views = 3D Views
     .n-4-viewports = 4 Viewports
-    .about-open-cad-studio = About Open CAD Studio
+    .about-open-cad-studio = Giới thiệu OpenVietGIS CAD
     .check-for-updates = Check for Updates...
     .align-text = Align Text
     .arrange-icons = Arrange Icons
