@@ -1,0 +1,65 @@
+name: OpenVietCAD WASM candidate
+on:
+  push:
+    branches: ['openvietcad/branding-v1']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: openvietcad-wasm-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      CARGO_BUILD_JOBS: 1
+      CARGO_INCREMENTAL: 0
+      TRUNK_SKIP_VERSION_CHECK: 'true'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Set up pinned Rust
+        run: |
+          rustup toolchain install 1.100.0 --profile minimal --target wasm32-unknown-unknown
+          rustup override set 1.100.0
+          rustc --version
+      - uses: taiki-e/install-action@cfdb7ed4ccc7c7dce37759eae89dc5674b469b39
+        with:
+          tool: trunk@0.22.2,wasm-bindgen@0.2.108
+      - name: Check source and tool versions
+        run: |
+          trunk --version
+          wasm-bindgen --version
+          test "$(sed -n '/name = "wasm-bindgen"/{n;s/version = "\(.*\)"/\1/p;q;}' Cargo.lock)" = 0.2.108
+          git diff --check
+          df -h
+          free -m
+      - name: Compile WASM and parse worker
+        run: trunk build --locked --release --public-url /app/ --dist dist/app --html-output index.html web-app.html
+      - name: Stage and validate candidate
+        run: python3 ci/ovg/stage.py
+      - name: Install browser for end-to-end test
+        run: |
+          npm install --prefix "$RUNNER_TEMP/ovg-browser" --no-audit --no-fund playwright-core@1.56.1
+          "$RUNNER_TEMP/ovg-browser/node_modules/.bin/playwright-core" install --with-deps chromium
+      - name: Real DWG and DXF browser round trips
+        run: |
+          export PLAYWRIGHT_CORE="$RUNNER_TEMP/ovg-browser/node_modules/playwright-core"
+          node ci/ovg/smoke.cjs
+      - name: Package verified release candidate and exact source
+        run: |
+          mkdir -p release-candidate
+          tar -czf release-candidate/OpenVietCAD-web.tar.gz -C dist/verified .
+          git archive --format=tar.gz --prefix=OpenVietCAD/ HEAD > release-candidate/OpenVietCAD-source.tar.gz
+          git rev-parse HEAD > release-candidate/COMMIT
+          cp LICENSE THIRD_PARTY.md release-candidate/
+          (cd release-candidate && sha256sum *.tar.gz COMMIT LICENSE THIRD_PARTY.md > SHA256SUMS)
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: openvietcad-verified-${{ github.sha }}
+          path: release-candidate/
+          retention-days: 30
+          if-no-files-found: error
