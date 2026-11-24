@@ -1,0 +1,8 @@
+{
+  "name": "OpenVietGIS",
+  "suffix": "CAD",
+  "logo": "ovg-mark.png",
+  "themeColor": "#132d3a",
+  "accentColor": "#2b78b9",
+  "defaultLocale": "vi-VN"
+}

@@ -1,0 +1,126 @@
+{
+  "result": [
+    {
+      "cmd": "LINE 0,0 10,0",
+      "status": "completed"
+    },
+    {
+      "cmd": "CIRCLE 5,5 2",
+      "status": "completed"
+    },
+    {
+      "cmd": "PLINE 0,0 10,0 10,10 0,10 C",
+      "status": "completed"
+    },
+    {
+      "check": "structured undo"
+    },
+    {
+      "check": "structured redo"
+    },
+    {
+      "cmd": "MOVE 0,0 100,0",
+      "status": "completed"
+    },
+    {
+      "check": "DXF independent group-code comparison",
+      "bytes": 113575,
+      "types": [
+        "LINE",
+        "CIRCLE",
+        "LWPOLYLINE"
+      ]
+    },
+    {
+      "cmd": "BOX 20,30,40 26,35,40 4",
+      "status": "completed"
+    },
+    {
+      "check": "3D BOX entity created",
+      "summary": {
+        "3D Solid": 1,
+        "Circle": 1,
+        "Line": 1,
+        "Polyline": 1
+      }
+    },
+    {
+      "check": "3D solid bounds",
+      "bounds": {
+        "max": [
+          26,
+          35,
+          44
+        ],
+        "min": [
+          20,
+          30,
+          40
+        ]
+      }
+    },
+    {
+      "check": "DWG solid save/reopen bounds",
+      "bytes": 30717
+    },
+    {
+      "cmd": "LINE 0,0 10,0",
+      "status": "completed"
+    },
+    {
+      "cmd": "ROTATE 0,0 90",
+      "status": "completed"
+    },
+    {
+      "cmd": "SCALE 0,0 2",
+      "status": "completed"
+    },
+    {
+      "check": "endpoint snap query",
+      "snap": {
+        "ok": true,
+        "snap": "Endpoint",
+        "world": [
+          1.2246467991473533e-15,
+          20,
+          0
+        ]
+      }
+    },
+    {
+      "check": "viewport world-point pick",
+      "handle": "84"
+    },
+    {
+      "cmd": "OFFSET 2 84 5,10 ENTER",
+      "status": "completed"
+    },
+    {
+      "check": "offset distance 2",
+      "handle": "85"
+    },
+    {
+      "cmd": "LINE 0,0 10,0",
+      "status": "completed"
+    },
+    {
+      "cmd": "LINE 5,-5 5,5",
+      "status": "completed"
+    },
+    {
+      "check": "trim at intersection x=5"
+    },
+    {
+      "cmd": "LINE 0,0 3,0",
+      "status": "completed"
+    },
+    {
+      "cmd": "LINE 5,-5 5,5",
+      "status": "completed"
+    },
+    {
+      "check": "extend to boundary x=5"
+    }
+  ],
+  "environment": "isolated standalone actual WASM; not production embed UI"
+}

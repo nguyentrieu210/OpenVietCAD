@@ -1,0 +1,64 @@
+{
+  "result": [
+    {
+      "cmd": "LINE 0,0 10,0",
+      "status": "completed"
+    },
+    {
+      "cmd": "CIRCLE 5,5 2",
+      "status": "completed"
+    },
+    {
+      "cmd": "PLINE 0,0 10,0 10,10 0,10 C",
+      "status": "completed"
+    },
+    {
+      "check": "structured undo"
+    },
+    {
+      "check": "structured redo"
+    },
+    {
+      "cmd": "MOVE 0,0 100,0",
+      "status": "completed"
+    },
+    {
+      "check": "DXF independent group-code comparison",
+      "bytes": 113575,
+      "types": [
+        "LINE",
+        "CIRCLE",
+        "LWPOLYLINE"
+      ]
+    },
+    {
+      "cmd": "BOX 20,30,40 26,35,40 4",
+      "status": "completed"
+    },
+    {
+      "check": "3D BOX entity created",
+      "summary": {
+        "3D Solid": 1,
+        "Circle": 1,
+        "Line": 1,
+        "Polyline": 1
+      }
+    },
+    {
+      "check": "3D solid bounds",
+      "bounds": {
+        "max": [
+          26,
+          35,
+          44
+        ],
+        "min": [
+          20,
+          30,
+          40
+        ]
+      }
+    }
+  ],
+  "environment": "isolated standalone actual WASM; not production embed UI"
+}

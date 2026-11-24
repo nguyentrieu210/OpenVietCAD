@@ -1,0 +1,17 @@
+<!doctype html><meta charset="utf-8"><title>CAD selection fixture</title><script>
+const channel="b".repeat(32), origin="http://127.0.0.1:4281", frame=document.createElement("iframe");
+const readOnly=new URLSearchParams(location.search).has("readonly");
+window.messages=[];
+const send=(type,fields={},transfer=[])=>frame.contentWindow.postMessage({source:"ovg-cad-host",channel,type,...fields},origin,transfer);
+window.send=send;
+window.addEventListener("message",async e=>{
+ if(e.origin!==origin||e.source!==frame.contentWindow||e.data?.source!=="ovg-cad-relay"||e.data.channel!==channel)return;
+ const d=e.data;window.messages.push({type:d.type,handle:d.handle,code:d.code,dirty:d.dirty,capabilities:d.capabilities});
+ if(d.type==="ready"){
+ const data=(await (await fetch("/selection.dxf")).arrayBuffer());send("open",{name:"selection.dxf",readOnly,buffer:data},[data]);
+ }
+ if(d.type==="save"){window.saveBytes=d.buffer.byteLength;send("saved",{saveId:d.saveId,ok:true})}
+});
+frame.style.cssText="width:1200px;height:850px;border:0";frame.setAttribute("sandbox","allow-scripts allow-same-origin");
+frame.src=origin+"/relay.html#"+channel;document.addEventListener("DOMContentLoaded",()=>document.body.append(frame));
+</script><body></body>

@@ -1,5 +1,6 @@
 from pathlib import Path
 import shutil,re
+from brand_stage import apply
 root=Path('dist/verified')
 assert not root.exists()
 shutil.copytree('dist/app',root/'app')
@@ -9,6 +10,7 @@ s=re.sub(r'<script src="ocs-control.js"[^>]*></script>','',s)
 s=re.sub(r'<script>\s*// Offline support: register the service worker\..*?</script>','',s,flags=re.S)
 assert 'analytics.js' not in s and 'ocs-control.js' not in s and 'serviceWorker.register' not in s
 p.write_text(s)
+apply(root / "app")
 assert list((root/'app').glob('*.wasm'))
 assert list((root/'app/worker_pkg').glob('*.wasm'))
 for name in ['relay.js','relay.html','relay.css']:

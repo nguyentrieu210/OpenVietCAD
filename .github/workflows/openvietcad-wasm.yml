@@ -1,7 +1,7 @@
 name: OpenVietCAD WASM candidate
 on:
   push:
-    branches: ['openvietcad/branding-v1']
+    branches: ['openvietcad/branding-v1', 'openvietcad/r048-stability']
   workflow_dispatch:
 permissions:
   contents: read
@@ -29,6 +29,28 @@ jobs:
       - uses: taiki-e/install-action@cfdb7ed4ccc7c7dce37759eae89dc5674b469b39
         with:
           tool: trunk@0.22.2,wasm-bindgen@0.2.108
+      - name: Restore Cargo dependency downloads
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+          key: cargo-download-v1-${{ runner.os }}-rust-1.100.0-${{ hashFiles('Cargo.lock') }}
+          restore-keys: cargo-download-v1-${{ runner.os }}-rust-1.100.0-
+      - name: Restore bounded compiled dependency cache
+        id: compiled-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: |
+            target/wasm32-unknown-unknown/release/deps
+            target/wasm32-unknown-unknown/release/build
+            target/wasm32-unknown-unknown/release/.fingerprint
+            target/release/deps
+            target/release/build
+            target/release/.fingerprint
+          key: cargo-compiled-v1-${{ runner.os }}-rust-1.100.0-${{ hashFiles('Cargo.lock', '**/Cargo.toml', '.cargo/config.toml', 'Trunk.toml', 'scripts/build-web-worker.sh') }}-${{ github.sha }}
+          restore-keys: cargo-compiled-v1-${{ runner.os }}-rust-1.100.0-${{ hashFiles('Cargo.lock', '**/Cargo.toml', '.cargo/config.toml', 'Trunk.toml', 'scripts/build-web-worker.sh') }}-
       - name: Check source and tool versions
         run: |
           trunk --version
@@ -41,6 +63,11 @@ jobs:
         run: trunk build --locked --release --public-url /app/ --dist dist/app --html-output index.html web-app.html
       - name: Stage and validate candidate
         run: python3 ci/ovg/stage.py
+      - name: Verify deterministic WASM transport compression
+        run: |
+          python3 -m unittest discover -s ci/ovg -p 'test_*.py'
+          python3 ci/ovg/precompress.py dist/verified/app
+          python3 -c 'import json; r=json.load(open("dist/verified/app/wasm-transfer.json")); assert r["gzip_bytes"] <= 65000000 and r["gzip_bytes"] <= 0.7*r["raw_bytes"], r'
       - name: Install browser for end-to-end test
         run: |
           npm install --prefix "$RUNNER_TEMP/ovg-browser" --no-audit --no-fund playwright-core@1.56.1
@@ -49,14 +76,53 @@ jobs:
         run: |
           export PLAYWRIGHT_CORE="$RUNNER_TEMP/ovg-browser/node_modules/playwright-core"
           node ci/ovg/smoke.cjs
+      - name: Compressed WASM browser and warm-cache regression
+        run: |
+          export PLAYWRIGHT_CORE="$RUNNER_TEMP/ovg-browser/node_modules/playwright-core"
+          node ci/ovg/transport-bench.cjs
+      - name: CAD commands and independent DXF geometry checks
+        run: |
+          export PLAYWRIGHT_CORE="$RUNNER_TEMP/ovg-browser/node_modules/playwright-core"
+          node ci/ovg/tools-smoke.cjs
+      - name: Real two-origin selection and read-only regression
+        run: |
+          export PLAYWRIGHT_CORE="$RUNNER_TEMP/ovg-browser/node_modules/playwright-core"
+          node ci/ovg/selection-smoke.cjs
+      - name: Runtime shell branding and saved preferences
+        run: |
+          export PLAYWRIGHT_CORE="$RUNNER_TEMP/ovg-browser/node_modules/playwright-core"
+          OVG_BRAND_REPORT=ovg-brand-report.json node ci/ovg/brand-smoke.cjs
+      - name: Check compiled cache budget
+        id: cache-budget
+        shell: bash
+        run: |
+          set -euo pipefail
+          bytes=0
+          for d in target/{release,wasm32-unknown-unknown/release}/{deps,build,.fingerprint}; do
+            if [ -d "$d" ]; then n=$(du -sb "$d" | cut -f1); bytes=$((bytes+n)); fi
+          done
+          echo "Compiled cache bytes: $bytes"
+          if [ "$bytes" -gt 0 ] && [ "$bytes" -le 4294967296 ]; then echo 'save=true' >> "$GITHUB_OUTPUT"; else echo 'save=false' >> "$GITHUB_OUTPUT"; fi
+      - name: Save verified compiled dependency cache
+        if: steps.cache-budget.outputs.save == 'true' && steps.compiled-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: |
+            target/wasm32-unknown-unknown/release/deps
+            target/wasm32-unknown-unknown/release/build
+            target/wasm32-unknown-unknown/release/.fingerprint
+            target/release/deps
+            target/release/build
+            target/release/.fingerprint
+          key: ${{ steps.compiled-cache.outputs.cache-primary-key }}
       - name: Package verified release candidate and exact source
         run: |
           mkdir -p release-candidate
           tar -czf release-candidate/OpenVietCAD-web.tar.gz -C dist/verified .
           git archive --format=tar.gz --prefix=OpenVietCAD/ HEAD > release-candidate/OpenVietCAD-source.tar.gz
           git rev-parse HEAD > release-candidate/COMMIT
-          cp LICENSE THIRD_PARTY.md release-candidate/
-          (cd release-candidate && sha256sum *.tar.gz COMMIT LICENSE THIRD_PARTY.md > SHA256SUMS)
+          cp LICENSE THIRD_PARTY.md ovg-transport-bench.json ovg-tools.json ovg-selection.json ovg-brand-report.json release-candidate/
+          (cd release-candidate && sha256sum *.tar.gz COMMIT LICENSE THIRD_PARTY.md ovg-transport-bench.json ovg-tools.json ovg-selection.json ovg-brand-report.json > SHA256SUMS)
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: openvietcad-verified-${{ github.sha }}
