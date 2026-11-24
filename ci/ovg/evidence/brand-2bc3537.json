@@ -1,0 +1,26 @@
+{
+  "results": [
+    {
+      "savedLanguage": null,
+      "lang": "vi-VN",
+      "title": "OVG Fixture CAD",
+      "theme": "#123456",
+      "preferencesPreserved": true
+    },
+    {
+      "savedLanguage": "en-US",
+      "lang": "en-US",
+      "title": "OVG Fixture CAD",
+      "theme": "#123456",
+      "preferencesPreserved": true
+    },
+    {
+      "savedLanguage": "system",
+      "lang": "en-US",
+      "title": "OVG Fixture CAD",
+      "theme": "#123456",
+      "preferencesPreserved": true
+    }
+  ],
+  "environment": "actual shell, loopback, runtime config override; engine UI theme not modified"
+}

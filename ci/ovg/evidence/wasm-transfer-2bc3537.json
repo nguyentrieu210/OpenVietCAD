@@ -1,0 +1,20 @@
+{
+  "assets": [
+    {
+      "asset": "OpenCADStudio-91cced92d9dc26bd_bg.wasm",
+      "raw_bytes": 162057306,
+      "gzip_bytes": 52960221,
+      "sha256": "950297d289bb0e4cfdd7eaefdfead46aba9f471337b39691b16eda115c7e7105",
+      "gzip_sha256": "4977268e455666a8d78143c443236344b1f646023a8ab03b69588b59b4c00bda"
+    },
+    {
+      "asset": "worker_pkg/ocs_web_worker_bg.wasm",
+      "raw_bytes": 26577211,
+      "gzip_bytes": 6479035,
+      "sha256": "428d7f508aa3d669f5abd075e0b0effc40130a7b04967b0dd500c177c5725ba0",
+      "gzip_sha256": "22c2e370ed50788ae99d201c181c44cac612f0da5ef151d448c973048a0f6920"
+    }
+  ],
+  "raw_bytes": 188634517,
+  "gzip_bytes": 59439256
+}

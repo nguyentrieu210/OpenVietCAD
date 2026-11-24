@@ -1,0 +1,74 @@
+{
+  "results": [
+    {
+      "readonly": false,
+      "messages": [
+        {
+          "type": "ready",
+          "capabilities": [
+            "dwg",
+            "dxf",
+            "readOnly",
+            "save",
+            "saveId",
+            "dirty",
+            "selection"
+          ]
+        },
+        {
+          "type": "loaded"
+        },
+        {
+          "type": "selection",
+          "handle": null
+        },
+        {
+          "type": "selection",
+          "handle": "2A"
+        },
+        {
+          "type": "error",
+          "code": "selection_unavailable"
+        },
+        {
+          "type": "save"
+        }
+      ],
+      "saveBytes": 51608
+    },
+    {
+      "readonly": true,
+      "messages": [
+        {
+          "type": "ready",
+          "capabilities": [
+            "dwg",
+            "dxf",
+            "readOnly",
+            "save",
+            "saveId",
+            "dirty",
+            "selection"
+          ]
+        },
+        {
+          "type": "loaded"
+        },
+        {
+          "type": "selection",
+          "handle": null
+        },
+        {
+          "type": "selection",
+          "handle": "2A"
+        },
+        {
+          "type": "error",
+          "code": "selection_unavailable"
+        }
+      ],
+      "saveBytes": 0
+    }
+  ],
+  "environment": "real two-origin loopback WASM relay; selection command and acknowledgement, no GIS/PostGIS linkage"
+}

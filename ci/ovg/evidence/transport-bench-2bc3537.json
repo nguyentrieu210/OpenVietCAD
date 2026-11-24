@@ -1,0 +1,130 @@
+{
+  "browser": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+  "environment": "loopback headless chromium software GPU; persistent browser context, 1 GiB cache budget; not production network",
+  "results": [
+    {
+      "label": "cold",
+      "format": "dxf",
+      "readyMs": 3483,
+      "roundTripMs": 7682,
+      "state": {
+        "bytes": 51604,
+        "format": "dxf",
+        "events": [
+          "ready:",
+          "loaded:",
+          "selection:",
+          "save:"
+        ]
+      },
+      "assets": [
+        {
+          "url": "/app/OpenCADStudio-91cced92d9dc26bd_bg.wasm",
+          "encoding": "gzip",
+          "contentLength": 52960221
+        },
+        {
+          "url": "/app/worker_pkg/ocs_web_worker_bg.wasm",
+          "encoding": "gzip",
+          "contentLength": 6479035
+        },
+        {
+          "url": "/app/worker_pkg/ocs_web_worker_bg.wasm",
+          "encoding": "gzip",
+          "contentLength": 6479035
+        }
+      ],
+      "timings": [
+        {
+          "asset": "/app/OpenCADStudio-91cced92d9dc26bd_bg.wasm",
+          "transferSize": 52960521,
+          "encodedBodySize": 52960221,
+          "decodedBodySize": 162057306
+        }
+      ]
+    },
+    {
+      "label": "warm",
+      "format": "dxf",
+      "readyMs": 2885,
+      "roundTripMs": 5322,
+      "state": {
+        "bytes": 51608,
+        "format": "dxf",
+        "events": [
+          "ready:",
+          "loaded:",
+          "selection:",
+          "save:"
+        ]
+      },
+      "assets": [
+        {
+          "url": "/app/OpenCADStudio-91cced92d9dc26bd_bg.wasm",
+          "encoding": "gzip",
+          "contentLength": 52960221
+        },
+        {
+          "url": "/app/worker_pkg/ocs_web_worker_bg.wasm",
+          "encoding": "gzip",
+          "contentLength": 6479035
+        },
+        {
+          "url": "/app/worker_pkg/ocs_web_worker_bg.wasm",
+          "encoding": "gzip",
+          "contentLength": 6479035
+        }
+      ],
+      "timings": [
+        {
+          "asset": "/app/OpenCADStudio-91cced92d9dc26bd_bg.wasm",
+          "transferSize": 0,
+          "encodedBodySize": 52960221,
+          "decodedBodySize": 162057306
+        }
+      ],
+      "mainWasmCached": true
+    },
+    {
+      "label": "warm-dwg",
+      "format": "dwg",
+      "readyMs": 2644,
+      "roundTripMs": 5034,
+      "state": {
+        "bytes": 30995,
+        "format": "dwg",
+        "events": [
+          "ready:",
+          "loaded:",
+          "selection:",
+          "save:"
+        ]
+      },
+      "assets": [
+        {
+          "url": "/app/OpenCADStudio-91cced92d9dc26bd_bg.wasm",
+          "encoding": "gzip",
+          "contentLength": 52960221
+        },
+        {
+          "url": "/app/worker_pkg/ocs_web_worker_bg.wasm",
+          "encoding": "gzip",
+          "contentLength": 6479035
+        },
+        {
+          "url": "/app/worker_pkg/ocs_web_worker_bg.wasm",
+          "encoding": "gzip",
+          "contentLength": 6479035
+        }
+      ],
+      "timings": [
+        {
+          "asset": "/app/OpenCADStudio-91cced92d9dc26bd_bg.wasm",
+          "transferSize": 0,
+          "encodedBodySize": 52960221,
+          "decodedBodySize": 162057306
+        }
+      ]
+    }
+  ]
+}
